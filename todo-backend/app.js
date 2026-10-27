@@ -1,6 +1,5 @@
 const express = require("express");
 const todosRouter = require("./routes/todos");
-const usersRouter = require("./routes/users");
 const reqLogger = require("./middleware/reqLogger");
 
 const app = express();
