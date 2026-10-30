@@ -14,10 +14,16 @@ User.init(
       type: DataTypes.TEXT,
       allowNull: false,
       unique: true,
+      validate: {
+        len: [3],
+      },
     },
     name: {
       type: DataTypes.TEXT,
       allowNull: false,
+      validate: {
+        len: [3],
+      },
     },
     passwordHash: {
       type: DataTypes.TEXT,
