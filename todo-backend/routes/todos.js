@@ -1,20 +1,29 @@
 const router = require("express").Router();
-const { Todo } = require("../models");
+const { Todo, User } = require("../models");
 
 // GET all todos
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
-    const todos = await Todo.findAll();
+    const todos = await Todo.findAll({
+      include: {
+        model: User,
+        attributes: ["id", "name", "username"],
+      },
+    });
     res.json(todos);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // GET todo by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   try {
-    const todo = await Todo.findByPk(req.params.id);
+    const todo = await Todo.findByPk(req.params.id, {
+      include: {
+        attributes: ["id", "name", "username"],
+      },
+    });
 
     if (!todo) {
       return res.status(404).json({ error: "Todo not found" });
@@ -22,19 +31,19 @@ router.get("/:id", async (req, res) => {
 
     res.json(todo);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // POST create todo
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
-    const { task, done } = req.body;
-    const todo = await Todo.create({ task, done });
+    const { task, done, userId } = req.body;
+    const todo = await Todo.create({ task, done, userId });
 
     res.status(201).json(todo);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
@@ -57,18 +66,23 @@ router.patch("/:id", async (req, res) => {
 });
 
 // DELETE todo
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res, next) => {
   try {
+    const { userId } = req.body;
     const todo = await Todo.findByPk(req.params.id);
 
     if (!todo) {
       return res.status(404).json({ error: "Todo not found" });
     }
 
+    if (todo.userId != userId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
     await todo.destroy();
     res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
